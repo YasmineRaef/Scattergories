@@ -80,7 +80,7 @@ To get the project and database running on your end:
 
 ```bash
 - yarn install
-- yarn migrate
+- yarn prisma migrate deploy
 - yarn prisma generate
 - yarn seed
 - yarn dev
