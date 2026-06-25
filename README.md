@@ -82,8 +82,9 @@ To get the project and database running on your end:
 - yarn install
 - yarn prisma migrate deploy
 - yarn prisma generate
+- yarn prisma db pull
 - yarn seed
 - yarn dev
 ```
-
+MAKE SURE THEE PASSWORD AND CONNECTION IS CORRECT, you will see a scattegories database in your postgreSQL server.
 ---
