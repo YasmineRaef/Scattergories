@@ -18,7 +18,7 @@ model answers {
 
 model games {
   roomCode String    @id
-  letter   String    @db.Char
+  letter   String    @db.Char(1)
   topic    String
   answers  answers[]
 }
