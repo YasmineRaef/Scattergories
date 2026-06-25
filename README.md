@@ -79,8 +79,10 @@ To get the project and database running on your end:
 3. Run the following commands:
 
 ```bash
-- yarn prisma migrate deploy
+- yarn install
+- yarn migrate
 - yarn prisma generate
+- yarn seed
 - yarn dev
 ```
 
