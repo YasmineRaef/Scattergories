@@ -1,4 +1,5 @@
 # Scattergories
+#### General notes as a starting point: [Scattergories_notes.pdf](https://github.com/user-attachments/files/29338468/Scattergories_notes.pdf)
 
 ### Collaborators:
 
