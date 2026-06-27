@@ -1,4 +1,5 @@
 # Scattergories
+
 #### General notes as a starting point: [Scattergories_notes.pdf](https://github.com/user-attachments/files/29338468/Scattergories_notes.pdf)
 
 ### Collaborators:
@@ -54,15 +55,97 @@ Create an Express API Server (Prisma + PostgreSQL) with at least _three_ routes:
 
 3. Exported the database _scheme and data_ and uploaded the dumfile in the `/data` folder.
 
+4. Restructured the project to include _Typescript_ debugging with `yarn tsc`.
+
+5. Added **Express** to create routes using `yarn add express`.
+
+6. Created 2 functions for generating random letters and topics.
+
+```js
+const getRandomLetter = () =>
+  String.fromCharCode(65 + Math.floor(Math.random() * 26));
+
+const getRandomTopic = () => {
+  const topics = [
+    "Object",
+    "Plants",
+    "Animals",
+    "Country",
+    "Programming Concept",
+    "Colors",
+    "Sports",
+    "Food",
+  ];
+  return topics[Math.floor(Math.random() * topics.length)];
+};
+```
+
+7. Built a function that inserts data/records in the games table to separate _prisma database logic_ from input validation and server status codes.
+
+```js
+const insertGame = async (roomID: string) => {
+  try {
+    return await prisma.games.create({
+      data: {
+        roomCode: roomID,
+        letter: getRandomLetter(),
+        topic: getRandomTopic(),
+      },
+    });
+  } catch (error) {
+    console.error("Failed to insert game: ", error);
+  }
+};
+```
+
+8. Created a `"/games"` _POST_ route for the user to add a new game with providing a **valid roomCode**.
+
+```js
+app.post("/games", async (req, res) => {
+  try {
+    const { roomCode } = req.body;
+    if (!roomCode || roomCode.trim() === "") {
+      console.log("No roomCode provided...");
+      return res.status(400).json({
+        message: "Please enter a room code to start. (i.e. json body)",
+      });
+    }
+    if (typeof roomCode !== "string") {
+      console.log("provided roomCode is not a string...");
+      return res.status(400).json({
+        message:
+          "Please enter a valid room code containing a combination of numbers and characters. (e.g. Test123)",
+      });
+    }
+    if (roomCode.length < 4 || roomCode.length > 6) {
+      console.log("roomCode length is <= 3...");
+      return res.status(400).json({
+        message: "roomCode must be between 4 and 6 characters.",
+      });
+    }
+
+    const newGame = await insertGame(roomCode);
+
+    return res.status(201).json({
+      message: "New Game created successfully!",
+      game: newGame,
+    });
+  } catch (error) {
+    console.log("User did not provide a req json body...");
+    return res.status(500).json({
+      message: "Please provide a roomCode in a json body.",
+    });
+  }
+});
+```
+
 ---
 
 ### Current work in progress:
 
 1. Fix some Github sync issues with all teammates.
-2. Connect the database server with our current prisma project and loading/generating the prisma models.
-3. Add/load three records at least in the games table for testing routes.
-4. Create the three routes to be visited using _express_. (i.e. **POST**`/games`, **GET**`"/games"`, **GET**`"/answer"`).
-5. Add server checking and validating user inputs.
+2. Create the two remaining routes to be visited using _express_. (i.e. **GET**`"/games"`, **POST**`"/answer"`).
+3. Add server checking and validating user inputs.
 
 ---
 
@@ -83,8 +166,6 @@ To get the project and database running on your end:
 - yarn prisma migrate deploy
 - yarn prisma generate
 - yarn prisma db pull
-- yarn seed
-- yarn dev
 ```
-MAKE SURE THEE PASSWORD AND CONNECTION IS CORRECT, you will see a scattegories database in your postgreSQL server.
----
+
+##### MAKE SURE THE PASSWORD AND CONNECTION IS CORRECT, you will see a scattegories database in your postgreSQL server.
