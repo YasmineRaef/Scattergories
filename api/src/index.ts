@@ -30,6 +30,17 @@ const getRandomTopic = () => {
 //---- To create a new game record in the games table ----
 const insertGame = async (roomID: string) => {
   try {
+    const room = await prisma.games.findUnique({
+      select:{
+        roomCode: true
+      },
+      where: {
+        roomCode: roomID
+      }
+    })
+  if(room?.roomCode){
+    throw new Error("Room code already exists")
+  }
     return await prisma.games.create({
       data: {
         roomCode: roomID,
@@ -39,8 +50,10 @@ const insertGame = async (roomID: string) => {
     });
   } catch (error) {
     console.error("Failed to insert game: ", error);
+    return null;
   }
 };
+
 
 const insertAnswer = async (roomID: string, answer: string, username: string) => {
   try {
@@ -99,7 +112,10 @@ app.post("/games", async (req, res) => {
     }
 
     const newGame = await insertGame(roomCode);
-
+    if(!newGame){
+      return res.status(409).json({
+        message: "This room code already exists"})
+    }
     return res.status(201).json({
       message: "New Game created successfully!",
       game: newGame,
