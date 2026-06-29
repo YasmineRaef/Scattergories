@@ -10,7 +10,7 @@ model answers {
   roomCodeID     String
   username       String
   entered_answer String
-  id             Int    @id
+  id             Int    @id @default(autoincrement())
   games          games  @relation(fields: [roomCodeID], references: [roomCode], onDelete: NoAction, onUpdate: NoAction, map: "roomCodeID")
 
   @@unique([roomCodeID, entered_answer])

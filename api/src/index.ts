@@ -42,6 +42,33 @@ const insertGame = async (roomID: string) => {
   }
 };
 
+const insertAnswer = async (roomID: string, answer: string, username: string) => {
+  try {
+    return await prisma.answers.create({
+      data: {
+        roomCodeID: roomID,
+        username: username,
+        entered_answer: answer
+      },
+    });
+  } catch (error) {
+    console.error("Failed to insert answer: ", error);
+  }
+};
+
+const activeRooms = async (roomID: string, username: string) => {
+  try {
+    return await prisma.active_rooms.create({
+      data: {
+        roomCodeID: roomID,
+        username: username,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to insert active games: ", error);
+  }
+};
+
 //-------------------- ROUTES --------------------------
 app.get("/", (req, res) => {
   res.send("Welcome to our Scattergories game...👋😊");
@@ -104,15 +131,54 @@ app.get("/games", async (req,res) => {
 
 })
 
+// Create answer rout (room code, username, answer)
+app.post("/answers", async (req, res) => {
+  try {
+    const {roomCode, username, answer} = req.body;
+    let index = 0;
+    const games = await prisma.games.findMany();
+    console.log(games[0].roomCode);
+    for (let i = 0; i < games.length; i ++){
+      if (!games[i].roomCode === roomCode) {
+        console.log("The game doesn't exist");
+        return res.status(400).json({message:"no game with this room code"});
+  
+      }
+      if (games[i].roomCode === roomCode) {
+        index = i;
+        break ; 
+    }}
+    const letter = games[index].letter;
+    if(answer.includes(" ")){
+      console.log("answer has spaces");
+      return res.status(400).json({message:"Answer must be only one word"});
+    }
+    const lower = answer.toUpperCase();
+
+    if (!lower.startsWith(letter)){
+      console.log("answer doesn't start with required letter");
+      return res.status(400).json({message:`Answer must start with ${letter}`});
+    }
+    const newAnswer = await insertAnswer(roomCode, answer, username);
+    const active_rooms = await activeRooms(roomCode, username);
+    return res.status(200).json({message:"the answer is created successfully", answer: newAnswer, confirmation: activeRooms})
+
+
+  } catch (error) {
+    console.log (error);
+  }
+
+});
+    
 
 app.listen(PORT, () => {
   console.log(`Listening on http://localhost:${PORT}`);
 });
 
 //------------- TO DATA IN DATABASE FOR TESTING -----------------
-// (async () => {
-//   console.log("Prisma Client connected successfully...");
-//   const games = await prisma.games.findMany();
-//   console.log("Games:", games);
-//   await prisma.$disconnect();
-// })();
+(async () => {
+  console.log("Prisma Client connected successfully...");
+  const answers = await prisma.answers.findMany();
+  console.log("Answers:", answers);
+  await prisma.$disconnect();
+})();
