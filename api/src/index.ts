@@ -85,6 +85,26 @@ app.post("/games", async (req, res) => {
   }
 });
 
+app.get("/games", async (req,res) => {
+ try {
+   const games = await prisma.games.findMany();
+  console.log("Games:", games); 
+  if(!games || games.length === 0){
+    console.log("Games table empty...");
+    return res.status(404).json({message: "No games created yet. Please create a game first..."});
+
+  }
+
+ return res.status(200).json({message: "Retreiving game data...", games:games});
+ }
+ catch(e){
+  console.log("Database connection error...");
+  return res.status(500).json({message: "INternal server error ..."});
+ }
+
+})
+
+
 app.listen(PORT, () => {
   console.log(`Listening on http://localhost:${PORT}`);
 });
