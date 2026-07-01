@@ -139,13 +139,104 @@ app.post("/games", async (req, res) => {
 });
 ```
 
+9. Created a `"/games"` _GET_ route for the user to list and see all the previously created games from the games table.
+```js
+app.get("/games", async (req,res) => {
+ try {
+   const games = await prisma.games.findMany();
+  console.log("Games:", games); 
+  if(!games || games.length === 0){
+    console.log("Games table empty...");
+    return res.status(404).json({message: "No games created yet. Please create a game first..."});
+
+  }
+
+ return res.status(200).json({message: "Retreiving game data...", games:games});
+ }
+ catch(e){
+  console.log("Database connection error...");
+  return res.status(500).json({message: "INternal server error ..."});
+ }
+
+})
+```
+10. Created a `"/answers"` _POST_ route for the user to add an answer by inputting the user's `username`, `roomCode` and the `answer`. The server checks if the answer starts with the letter associated with the roomCode and returns a specific message.
+```js
+app.post("/answers", async (req, res) => {
+  try {
+    const {roomCode, username, answer} = req.body;
+    let index = 0;
+    const games = await prisma.games.findMany();
+    console.log(games[0].roomCode);
+    for (let i = 0; i < games.length; i ++){
+      if (!games[i].roomCode === roomCode) {
+        console.log("The game doesn't exist");
+        return res.status(400).json({message:"no game with this room code"});
+  
+      }
+      if (games[i].roomCode === roomCode) {
+        index = i;
+        break ; 
+    }}
+    const letter = games[index].letter;
+    if(answer.includes(" ")){
+      console.log("answer has spaces");
+      return res.status(400).json({message:"Answer must be only one word"});
+    }
+    const lower = answer.toUpperCase();
+
+    if (!lower.startsWith(letter)){
+      console.log("answer doesn't start with required letter");
+      return res.status(400).json({message:`Answer must start with ${letter}`});
+    }
+    const newAnswer = await insertAnswer(roomCode, answer, username);
+    const active_rooms = await activeRooms(roomCode, username);
+    return res.status(200).json({message:"the answer is created successfully", answer: newAnswer, confirmation: activeRooms})
+
+
+  } catch (error) {
+    console.log (error);
+  }
+
+});
+```
+11. Created a function to add/write the acceptable answer in the answers table along with the active_rooms table.
+```js
+const insertAnswer = async (roomID: string, answer: string, username: string) => {
+  try {
+    return await prisma.answers.create({
+      data: {
+        roomCodeID: roomID,
+        username: username,
+        entered_answer: answer
+      },
+    });
+  } catch (error) {
+    console.error("Failed to insert answer: ", error);
+  }
+};
+
+const activeRooms = async (roomID: string, username: string) => {
+  try {
+    return await prisma.active_rooms.create({
+      data: {
+        roomCodeID: roomID,
+        username: username,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to insert active games: ", error);
+  }
+};
+```
+
 ---
 
-### Current work in progress:
+### To do:
 
-1. Fix some Github sync issues with all teammates.
-2. Create the two remaining routes to be visited using _express_. (i.e. **GET**`"/games"`, **POST**`"/answer"`).
-3. Add server checking and validating user inputs.
+1. Adding error handling and user inputs when a user tries to add an answer to a roomCode where someone is already in that game.
+2. Creating a `"/logout"` route, so the users can logout of the current game and other users could access it afterwards. (i.e. deletes the record from the active_rooms table)
+3. Optional: Creating a `cosole.log` function that echos the data in each table for debugging purposes **developer's testing**.
 
 ---
 
@@ -159,7 +250,7 @@ To get the project and database running on your end:
 
 1. Clone the repo with `git clone` in a local folder after `cd`-ing inside the folder.
 2. Copy the **.env.example** file in your **.env** file, and change the password (and port number if needed).
-3. Run the following commands:
+3. Run the following commands *after cd-ing inside the `api` folder by running `cd api`*:
 
 ```bash
 - yarn install
